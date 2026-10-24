@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import DEFAULT_PERSONA, current_user, templates
 from app.db import get_db
-from app.models import Goal, Milestone
+from app.models import Call, Goal, Milestone
 
 router = APIRouter()
 IST = ZoneInfo("Asia/Kolkata")
@@ -69,17 +69,29 @@ def validate_goal(form, today):
 
 
 def render_dashboard(request, db, user, errors=None, values=None, status=200):
-    from app.calls import availability
+    from app.calls import availability, pending
     goal = db.scalar(select(Goal).where(Goal.user_id == user.id))
     milestones = db.scalars(
         select(Milestone).join(Goal, Milestone.goal_id == Goal.id)
         .where(Goal.user_id == user.id)
         .order_by(Milestone.due_date, Milestone.position)
     ).all() if goal else []
+    review_ids = {m.id for m in pending(db, goal.id, user.id)} if goal else set()
+    latest_call = db.scalar(
+        select(Call).where(Call.user_id == user.id, Call.goal_id == goal.id)
+        .order_by(Call.requested_at.desc()).limit(1)
+    ) if goal else None
+    latest_milestones = {
+        m.id: m.title for m in db.scalars(
+            select(Milestone).where(Milestone.goal_id == goal.id)
+        ).all()
+    } if goal else {}
     return templates.TemplateResponse(
         request=request, name="home.html", status_code=status,
         context=dict(user=user, goal=goal, milestones=milestones,
                      calling=availability(db, user, goal) if goal else None,
+                      review_ids=review_ids, latest_call=latest_call,
+                      latest_milestones=latest_milestones,
                      flash=request.scope.get("session", {}).pop("flash", None),
                      errors=errors or {}, values=values or {},
                      today=datetime.now(IST).date().isoformat(), ist=IST),
@@ -92,6 +104,8 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     if user is None:
         request.session.clear()
         return RedirectResponse("/login", status_code=303)
+    from app.calls import sync_user_calls
+    sync_user_calls(db, user.id)
     return render_dashboard(request, db, user)
 
 

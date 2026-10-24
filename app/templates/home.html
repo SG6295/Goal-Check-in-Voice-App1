@@ -4,7 +4,7 @@
 <header class="topbar"><a class="wordmark" href="/">GOAL CHECK-IN</a><form method="post" action="/logout"><button class="quiet-button">Log out</button></form></header>
 <div class="dashboard">
   <h1>Hello {{ user.name }}</h1>
-  <p><a href="/calls">Call history</a></p>
+  <p><a href="/calls">Call history</a> · <a href="/">Refresh results</a></p>
   {% if flash %}<p class="form-alert" role="status">{{ flash }}</p>{% endif %}
   {% if errors.form %}<p class="form-alert" role="alert">{{ errors.form }}</p>{% endif %}
   {% if not goal %}
@@ -35,10 +35,25 @@
     {% if calling.reason %}<p id="call-reason">{{ calling.reason }}</p>{% endif %}
   </section>
   <section class="dashboard-section"><p class="eyebrow">Your goal</p><h2>{{ goal.title }}</h2><p class="preserve-lines">{{ goal.done_definition }}</p><p>Deadline: <strong>{{ goal.deadline.strftime('%d %b %Y') }}</strong></p></section>
+  {% if latest_call %}
+  <section class="dashboard-section" aria-labelledby="latest-checkin-heading">
+    <h2 id="latest-checkin-heading">Latest check-in</h2>
+    <p>{{ latest_call.requested_at.astimezone(ist).strftime('%d %b %Y, %H:%M') }} IST · <strong>{{ latest_call.state }}</strong></p>
+    {% if latest_call.state == 'in_progress' %}
+    <p>Call in progress, results appear about a minute after you hang up</p>
+    <p><a class="quiet-button" href="/">Refresh</a></p>
+    {% endif %}
+    <p>Milestone 1: {{ latest_milestones.get(latest_call.milestone_1_id, '—') }} · {{ latest_call.m1_status or '—' }}</p>
+    <p>Milestone 2: {{ latest_milestones.get(latest_call.milestone_2_id, '—') }} · {{ latest_call.m2_status or '—' }}</p>
+    <p><strong>Summary:</strong></p><p class="preserve-lines">{{ latest_call.summary_note or '—' }}</p>
+    <p><strong>Blocker:</strong></p><p class="preserve-lines">{{ latest_call.blocker or '—' }}</p>
+  </section>
+  {% endif %}
   <section class="dashboard-section"><h2>Milestone checklist</h2>
     <ul class="milestone-list">
     {% for m in milestones %}
       <li><h3>{{ m.title }}</h3><p>Due {{ m.due_date.strftime('%d %b') }}</p>
+        {% if m.id in review_ids %}<span class="status-detail">Next call reviews this</span>{% endif %}
         <span class="status-badge status-{{ m.status }}">{{ m.status }}</span>
         <span class="status-detail">{{ {'user': 'you', 'agent': 'agent', 'corrected': 'corrected'}.get(m.status_source, m.status_source or '—') }} · {% if m.status_updated_at %}{{ m.status_updated_at.astimezone(ist).strftime('%d %b %Y, %H:%M') }} IST{% else %}Not updated{% endif %}</span>
         {% if m.status != 'done' %}<form method="post" action="/milestones/{{ m.id }}/done"><button class="quiet-button">Mark done</button></form>{% endif %}

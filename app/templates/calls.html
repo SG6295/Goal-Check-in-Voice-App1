@@ -4,6 +4,7 @@
 <header class="topbar"><a class="wordmark" href="/">GOAL CHECK-IN</a><a href="/">Dashboard</a></header>
 <div class="dashboard">
 <h1>{{ 'Call details' if detail else 'Call history' }}</h1>
+{% if not detail %}<p><a class="quiet-button" href="/calls">Refresh results</a></p>{% endif %}
 {% if detail %}<p><a href="/calls">All calls</a></p>{% endif %}
 {% for call in calls %}
 <section class="dashboard-section">

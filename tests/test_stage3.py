@@ -11,7 +11,7 @@ from sqlalchemy import select
 
 import test_stage2
 from test_stage2 import form_data
-from app.calls import initiate, availability, now_ist, dynamic_variables, detail, history
+from app.calls import initiate, availability, now_ist, dynamic_variables, detail, history, sync_call, sync_user_calls
 from app.config import load_config
 from app.call_processing import normalize_status, process_event
 from app.models import Call, Goal, Milestone, WebhookEvent
@@ -166,6 +166,67 @@ class CallTests(unittest.TestCase):
                 detail(call.id, self.request, self.db)
             self.assertEqual(error.exception.status_code, 404)
             self.assertNotIn(str(call.id).encode(), history(self.request, self.db).body)
+
+    def test_pull_sync_processes_completed_call_and_stale_no_webhook(self):
+        self.prepare()
+        self.start_call()
+        call = self.db.scalar(select(Call).where(Call.user_id == self.user.id))
+        self.goal.call_lock_until = self.now + timedelta(minutes=10)
+        self.db.commit()
+        payload = {
+            "conversation_id": call.conversation_id,
+            "status": "done",
+            "transcript": [{"role": "agent", "message": "Checked in"}],
+            "metadata": {"call_duration_secs": 80},
+            "analysis": {"data_collection_results": {
+                "m1_status": {"value": "on_track"},
+                "m2_status": {"value": "blocked"},
+                "summary_note": {"value": "Good progress"},
+                "blocker": {"value": "Waiting for supplies"},
+                "opt_out": {"value": False},
+            }},
+        }
+        response = type("Response", (), {
+            "raise_for_status": lambda self: None,
+            "json": lambda self: payload,
+        })()
+        with patch("app.calls.httpx.get", return_value=response) as get:
+            self.assertTrue(sync_call(call))
+            self.assertEqual(get.call_args.kwargs["timeout"], 15)
+            self.assertEqual(get.call_args.kwargs["headers"], {"xi-api-key": load_config().elevenlabs_api_key})
+        self.db.refresh(call)
+        self.db.refresh(self.goal)
+        self.assertEqual((call.state, call.m1_status, call.m2_status), ("completed", "on_track", "blocked"))
+        self.assertEqual((call.summary_note, call.blocker, call.transcript[0]["message"]),
+                         ("Good progress", "Waiting for supplies", "Checked in"))
+        self.assertIsNone(self.goal.call_lock_until)
+
+        call.state, call.failure_reason = "failed", "no_webhook"
+        call.ended_at = None
+        self.db.commit()
+        payload["status"] = "in_progress"
+        with patch("app.calls.httpx.get", return_value=response):
+            self.assertFalse(sync_call(call))
+        self.assertEqual(call.state, "failed")
+        payload["status"] = "done"
+        self.db.refresh(self.goal)
+        self.goal.call_lock_until = self.now + timedelta(minutes=10)
+        self.db.commit()
+        with patch("app.calls.httpx.get", return_value=response):
+            sync_user_calls(self.db, self.user.id)
+        self.db.refresh(call)
+        self.assertEqual(call.state, "completed")
+
+    def test_dashboard_latest_checkin_and_next_review_labels(self):
+        self.prepare()
+        self.start_call()
+        from app.dashboard import render_dashboard
+        response = render_dashboard(self.request, self.db, self.user)
+        body = response.body
+        self.assertIn(b"Latest check-in", body)
+        self.assertIn(b"Call in progress, results appear about a minute after you hang up", body)
+        self.assertEqual(body.count(b"Next call reviews this"), 2)
+        self.assertIn(b"Refresh", body)
 
     def test_short_review_and_failure_states(self):
         self.prepare()

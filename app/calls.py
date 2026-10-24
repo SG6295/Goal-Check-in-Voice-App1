@@ -1,11 +1,15 @@
 """SIP admission control and user-owned call history."""
 from datetime import datetime, timedelta, time
+from types import SimpleNamespace
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
+from urllib.parse import quote
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select, update, func, or_, text
+from sqlalchemy.orm import object_session
 from sqlalchemy.orm import Session
 
 from app.auth import current_user, templates
@@ -13,6 +17,7 @@ from app.config import load_config
 from app.db import get_db
 from app.models import Call, Goal, Milestone
 from app.elevenlabs_client import place_call
+from app.call_processing import process_event
 
 router = APIRouter()
 IST = ZoneInfo("Asia/Kolkata")
@@ -21,6 +26,48 @@ ACTIVE = ("initiating", "in_progress")
 
 def now_ist():
     return datetime.now(IST)
+
+
+def sync_call(call):
+    if not call.conversation_id or call.state not in ACTIVE and not (
+        call.state == "failed" and call.failure_reason == "no_webhook"
+    ):
+        return False
+    db = object_session(call)
+    if db is None:
+        return False
+    config = load_config()
+    try:
+        response = httpx.get(
+            f"https://api.elevenlabs.io/v1/convai/conversations/{quote(call.conversation_id, safe='')}",
+            headers={"xi-api-key": config.elevenlabs_api_key},
+            timeout=15,
+        )
+        response.raise_for_status()
+        data = response.json()
+    except (httpx.HTTPError, ValueError):
+        return False
+    if not isinstance(data, dict) or data.get("status") not in {"done", "failed"}:
+        return False
+    event = {"type": "post_call_transcription", "data": data}
+    record = SimpleNamespace(processed_at=None)
+    try:
+        process_event(db, event, record)
+        db.commit()
+        return True
+    except Exception:
+        db.rollback()
+        return False
+
+
+def sync_user_calls(db, user_id):
+    calls = db.scalars(select(Call).where(
+        Call.user_id == user_id, Call.conversation_id.is_not(None),
+        or_(Call.state.in_(ACTIVE),
+            (Call.state == "failed") & (Call.failure_reason == "no_webhook")),
+    ).order_by(Call.requested_at)).all()
+    for call in calls:
+        sync_call(call)
 
 
 def owned_user(request, db):
@@ -166,6 +213,7 @@ def initiate(goal_id: int, request: Request, db: Session = Depends(get_db)):
 @router.get("/calls")
 def history(request: Request, db: Session = Depends(get_db)):
     user = owned_user(request, db)
+    sync_user_calls(db, user.id)
     calls = db.scalars(select(Call).where(Call.user_id == user.id)
                       .order_by(Call.requested_at.desc())).all()
     return templates.TemplateResponse(request=request, name="calls.html",
