@@ -16,6 +16,7 @@
 }
 
 * { box-sizing: border-box; }
+.primary-button:disabled { opacity: .55; cursor: not-allowed; transform: none; }
 .dashboard { width: min(720px, calc(100% - 32px)); margin: 24px auto 60px; overflow-wrap: anywhere; }
 .dashboard h1 { font-size: 32px; }
 .dashboard-section { padding: 24px; margin-top: 24px; background: #fff; border: 1px solid #dce2da; border-radius: 16px; }

@@ -4,6 +4,8 @@
 <header class="topbar"><a class="wordmark" href="/">GOAL CHECK-IN</a><form method="post" action="/logout"><button class="quiet-button">Log out</button></form></header>
 <div class="dashboard">
   <h1>Hello {{ user.name }}</h1>
+  <p><a href="/calls">Call history</a></p>
+  {% if flash %}<p class="form-alert" role="status">{{ flash }}</p>{% endif %}
   {% if errors.form %}<p class="form-alert" role="alert">{{ errors.form }}</p>{% endif %}
   {% if not goal %}
   <section class="dashboard-section"><h2>Set your goal</h2>
@@ -24,6 +26,14 @@
     </form>
   </section>
   {% else %}
+  <section class="dashboard-section">
+    <h2>Check in by phone</h2>
+    <p>{{ calling.used }} of {{ calling.maximum }} calls used today</p>
+    <form method="post" action="/goals/{{ goal.id }}/call" onsubmit="const b=this.querySelector('button'); b.disabled=true; b.textContent='Calling...';">
+      <button class="primary-button" {% if calling.reason %}disabled aria-describedby="call-reason"{% endif %}>Call me now</button>
+    </form>
+    {% if calling.reason %}<p id="call-reason">{{ calling.reason }}</p>{% endif %}
+  </section>
   <section class="dashboard-section"><p class="eyebrow">Your goal</p><h2>{{ goal.title }}</h2><p class="preserve-lines">{{ goal.done_definition }}</p><p>Deadline: <strong>{{ goal.deadline.strftime('%d %b %Y') }}</strong></p></section>
   <section class="dashboard-section"><h2>Milestone checklist</h2>
     <ul class="milestone-list">

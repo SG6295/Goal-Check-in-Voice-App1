@@ -69,6 +69,7 @@ def validate_goal(form, today):
 
 
 def render_dashboard(request, db, user, errors=None, values=None, status=200):
+    from app.calls import availability
     goal = db.scalar(select(Goal).where(Goal.user_id == user.id))
     milestones = db.scalars(
         select(Milestone).join(Goal, Milestone.goal_id == Goal.id)
@@ -78,6 +79,8 @@ def render_dashboard(request, db, user, errors=None, values=None, status=200):
     return templates.TemplateResponse(
         request=request, name="home.html", status_code=status,
         context=dict(user=user, goal=goal, milestones=milestones,
+                     calling=availability(db, user, goal) if goal else None,
+                     flash=request.scope.get("session", {}).pop("flash", None),
                      errors=errors or {}, values=values or {},
                      today=datetime.now(IST).date().isoformat(), ist=IST),
     )

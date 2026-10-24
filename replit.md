@@ -27,7 +27,7 @@ An access-code-protected goal check-in web app with explicit voice-call consent 
 ## Architecture decisions
 
 - The application uses the required standalone Python stack; the existing TypeScript API and mockup services remain unchanged.
-- Stage 2 adds one-goal creation, milestone completion, and persona editing. Call initiation remains out of scope.
+- Stage 3 adds guarded SIP call initiation, transactional webhook processing, and read-only call history/transcripts.
 
 ## Product
 
@@ -37,7 +37,7 @@ An access-code-protected goal check-in web app with explicit voice-call consent 
 
 ## User preferences
 
-- Keep the Python/FastAPI/SQLAlchemy/Jinja2 stack. Stage 2 must not introduce new frameworks or schema changes beyond the Stage 1 tables; do not build calling yet.
+- Keep the Python/FastAPI/SQLAlchemy/Jinja2 stack and the Stage 1 schema. Phone calls are enabled only when CALL_MODE is sip; never change that setting just to run tests.
 
 ## Gotchas
 

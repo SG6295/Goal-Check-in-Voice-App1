@@ -20,6 +20,7 @@ from app.db import dispose_database, get_db, initialize_database
 from app.models import WebhookEvent
 from app.webhooks import router as webhook_router
 from app.dashboard import router as dashboard_router
+from app.calls import router as calls_router
 
 
 logging.basicConfig(level=logging.INFO)
@@ -50,6 +51,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(auth_router)
 app.include_router(webhook_router)
 app.include_router(dashboard_router)
+app.include_router(calls_router)
 
 
 @app.middleware("http")

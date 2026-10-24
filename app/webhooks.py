@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.config import load_config
 from app.db import get_db
 from app.models import WebhookEvent
+from app.call_processing import process_event
 
 
 logger = logging.getLogger(__name__)
@@ -63,6 +64,8 @@ async def receive_elevenlabs_webhook(
             .returning(WebhookEvent.id)
         )
         inserted_id = db.execute(statement).scalar_one_or_none()
+        if inserted_id is not None:
+            process_event(db, event, db.get(WebhookEvent, inserted_id))
         db.commit()
     except Exception:
         db.rollback()

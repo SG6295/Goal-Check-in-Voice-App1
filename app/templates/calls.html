@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Call history · Goal Check-in{% endblock %}
+{% block content %}
+<header class="topbar"><a class="wordmark" href="/">GOAL CHECK-IN</a><a href="/">Dashboard</a></header>
+<div class="dashboard">
+<h1>{{ 'Call details' if detail else 'Call history' }}</h1>
+{% if detail %}<p><a href="/calls">All calls</a></p>{% endif %}
+{% for call in calls %}
+<section class="dashboard-section">
+  <h2><a href="/calls/{{ call.id }}">{{ call.requested_at.astimezone(ist).strftime('%d %b %Y, %H:%M') }} IST</a></h2>
+  <p>State: <strong>{{ call.state }}</strong></p>
+  <p>Milestone 1: {{ call.m1_status or '—' }} · Milestone 2: {{ call.m2_status or '—' }}</p>
+  <h3>Summary</h3><p class="preserve-lines">{{ call.summary_note or 'No summary yet.' }}</p>
+  <h3>Blocker</h3><p class="preserve-lines">{{ call.blocker or 'None reported.' }}</p>
+</section>
+{% else %}<p>No calls yet.</p>{% endfor %}
+{% if detail %}
+<section class="dashboard-section"><h2>Transcript</h2>
+{% for turn in turns %}
+<p><strong>{{ turn.speaker }}</strong> <span>{{ turn.time }}</span></p><p class="preserve-lines">{{ turn.message }}</p>
+{% else %}<p>No transcript available.</p>{% endfor %}
+</section>
+{% endif %}
+</div>
+{% endblock %}

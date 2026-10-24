@@ -1,1 +1,2 @@
 - [Python preview routing](python-preview-routing.md) — use the application router rather than a direct-port preview in this workspace.
+- [Webhook transactions](webhook-transactions.md) — insert and process atomically so deduplication cannot swallow retries after processing failures.
