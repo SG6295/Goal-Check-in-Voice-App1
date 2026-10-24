@@ -27,7 +27,7 @@ An access-code-protected goal check-in web app with explicit voice-call consent 
 ## Architecture decisions
 
 - The application uses the required standalone Python stack; the existing TypeScript API and mockup services remain unchanged.
-- This first stage intentionally stops before goal management, milestone management, and call initiation.
+- Stage 2 adds one-goal creation, milestone completion, and persona editing. Call initiation remains out of scope.
 
 ## Product
 
@@ -37,7 +37,7 @@ An access-code-protected goal check-in web app with explicit voice-call consent 
 
 ## User preferences
 
-- Keep the initial scope limited to authentication, schema, health, and webhook intake; do not build goals, milestones, or calling yet.
+- Keep the Python/FastAPI/SQLAlchemy/Jinja2 stack. Stage 2 must not introduce new frameworks or schema changes beyond the Stage 1 tables; do not build calling yet.
 
 ## Gotchas
 

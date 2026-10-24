@@ -19,6 +19,7 @@ from app.config import load_config, missing_required_variables
 from app.db import dispose_database, get_db, initialize_database
 from app.models import WebhookEvent
 from app.webhooks import router as webhook_router
+from app.dashboard import router as dashboard_router
 
 
 logging.basicConfig(level=logging.INFO)
@@ -48,6 +49,7 @@ app = FastAPI(title="Goal Check-in", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(auth_router)
 app.include_router(webhook_router)
+app.include_router(dashboard_router)
 
 
 @app.middleware("http")
@@ -70,19 +72,6 @@ def healthz(db: Session = Depends(get_db)) -> JSONResponse:
         return JSONResponse({"ok": True, "db": True})
     except Exception:
         return JSONResponse({"ok": False, "db": False}, status_code=503)
-
-
-@app.get("/", response_class=HTMLResponse)
-def home(request: Request, db: Session = Depends(get_db)) -> HTMLResponse:
-    user = current_user(request, db)
-    if user is None:
-        request.session.clear()
-        return RedirectResponse("/login", status_code=303)
-    return templates.TemplateResponse(
-        request=request,
-        name="home.html",
-        context={"name": user.name},
-    )
 
 
 @app.get("/admin/events", response_class=HTMLResponse)

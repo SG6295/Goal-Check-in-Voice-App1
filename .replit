@@ -23,6 +23,7 @@ timeoutMs = 20000
 [userenv.shared]
 ELEVENLABS_AGENT_ID = "agent_9601m5pe985zez28d5w5yzfgj819"
 ELEVENLABS_PHONE_NUMBER_ID = "phnum_6501m5pj50rze2vszvrtx2pbqgfc"
+CALL_MODE = "sip"
 
 [nix]
 channel = "stable-25_05"

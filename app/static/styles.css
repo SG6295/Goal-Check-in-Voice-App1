@@ -16,6 +16,24 @@
 }
 
 * { box-sizing: border-box; }
+.dashboard { width: min(720px, calc(100% - 32px)); margin: 24px auto 60px; overflow-wrap: anywhere; }
+.dashboard h1 { font-size: 32px; }
+.dashboard-section { padding: 24px; margin-top: 24px; background: #fff; border: 1px solid #dce2da; border-radius: 16px; }
+.dashboard-section h2 { margin-bottom: 22px; font-size: 24px; }
+.dashboard textarea { display: block; width: 100%; min-height: 140px; resize: vertical; padding: 12px; border: 1px solid #dce2da; border-radius: 9px; font: inherit; }
+.dashboard fieldset { min-width: 0; margin: 18px 0; padding: 16px; border: 1px solid #dce2da; border-radius: 9px; }
+.milestone-list { padding: 0; list-style: none; }
+.milestone-list li { padding: 18px 0; border-top: 1px solid #dce2da; }
+.milestone-list h3 { margin: 0; }
+.milestone-list form { margin-top: 12px; }
+.status-badge { display: inline-block; padding: 4px 9px; border-radius: 6px; background: #edf0eb; font-size: 13px; }
+.status-done, .status-on_track { background: #dceee0; color: #234b32; }
+.status-at_risk, .status-unclear { background: #fff0cd; color: #684600; }
+.status-blocked { background: #f8dedb; color: #812d29; }
+.status-detail { display: block; margin-top: 8px; font-size: 12px; color: #606d64; }
+.preserve-lines { white-space: pre-wrap; }
+.reset-button { margin-top: 14px; }
+@media (max-width: 400px) { .dashboard-section { padding: 16px; } }
 
 body {
   min-width: 320px;
