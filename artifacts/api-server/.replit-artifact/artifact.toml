@@ -38,3 +38,15 @@ paths = ["/"]
 
 [services.development]
 run = "cd ../.. && exec uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+
+[services.production.build]
+args = ["python", "-m", "pip", "install", "-r", "requirements.txt"]
+
+[services.production.run]
+args = ["sh", "-c", "exec python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"]
+
+[services.production.run.env]
+PORT = "8000"
+
+[services.production.health.startup]
+path = "/healthz"
