@@ -1,5 +1,5 @@
 kind = "api"
-previewPath = "/api" # TODO - should be excluded from preview in the first place
+previewPath = "/"
 title = "API Server"
 version = "1.0.0"
 id = "3B4_FFSkEVBkAeYMFRJ2e"
@@ -30,3 +30,11 @@ NODE_ENV = "production"
 
 [services.production.health.startup]
 path = "/api/healthz"
+
+[[services]]
+localPort = 8000
+name = "Goal Check-in Web App"
+paths = ["/"]
+
+[services.development]
+run = "cd ../.. && exec uvicorn app.main:app --host 0.0.0.0 --port $PORT"
