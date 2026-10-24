@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Webhook events · Goal Check-in{% endblock %}
+
+{% block content %}
+  <header class="topbar">
+    <a class="wordmark" href="/">GOAL CHECK-IN</a>
+    <form method="post" action="/logout">
+      <button class="quiet-button" type="submit">Log out</button>
+    </form>
+  </header>
+  <section class="events-panel">
+    <p class="eyebrow">System activity</p>
+    <h1>Recent webhook events</h1>
+    <p class="intro-description">The latest 20 received events. Times are shown in Asia/Kolkata.</p>
+    {% if events %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Received (IST)</th>
+              <th scope="col">Event type</th>
+              <th scope="col">Conversation</th>
+              <th scope="col">Processed (IST)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in events %}
+              <tr>
+                <td>{% if event.received_at %}{{ event.received_at.strftime("%Y-%m-%d %H:%M:%S") }}{% else %}—{% endif %}</td>
+                <td><span class="event-type">{{ event.event_type or "—" }}</span></td>
+                <td class="conversation-id">{{ event.conversation_id or "—" }}</td>
+                <td>{% if event.processed_at %}{{ event.processed_at.strftime("%Y-%m-%d %H:%M:%S") }}{% else %}—{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <span class="empty-mark" aria-hidden="true">·</span>
+        <h2>No events yet</h2>
+        <p>New webhook events will appear here after they arrive.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

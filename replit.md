@@ -1,44 +1,48 @@
-# [Project name]
+# Goal Check-in
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+An access-code-protected goal check-in web app with explicit voice-call consent and signed ElevenLabs webhook intake.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `uvicorn app.main:app --host 0.0.0.0 --port $PORT` — run the FastAPI app (set `PORT=8000` for local runs)
 - `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required environment: `DATABASE_URL`, `SESSION_SECRET`, `ACCESS_CODE`, `ELEVENLABS_API_KEY`, `ELEVENLABS_AGENT_ID`, `ELEVENLABS_PHONE_NUMBER_ID`, `ELEVENLABS_WEBHOOK_SECRET`
+- Optional environment: `CALL_MODE` (`sip` or `web`, default `web`), `MAX_CALLS_PER_GOAL_PER_DAY` (default `3`), `MAX_CONCURRENT_CALLS` (default `4`), `CALL_LOCK_MINUTES` (default `15`)
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Python 3.11
+- FastAPI, SQLAlchemy 2.x, psycopg 3, Jinja2, plain CSS
+- PostgreSQL; all first-stage tables are created at startup with `Base.metadata.create_all`
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `app/main.py` — FastAPI routes and startup lifecycle
+- `app/config.py` — environment-only configuration and required-variable checks
+- `app/db.py` and `app/models.py` — PostgreSQL engine, sessions, and schema
+- `app/auth.py` — access-code login, consent, and session handling
+- `app/webhooks.py` — signed ElevenLabs webhook verification and idempotent intake
+- `app/templates/` and `app/static/` — server-rendered pages and CSS
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- The application uses the required standalone Python stack; the existing TypeScript API and mockup services remain unchanged.
+- This first stage intentionally stops before goal management, milestone management, and call initiation.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Access-code login with required, timestamped voice-call consent
+- PostgreSQL schema prepared for users, goals, milestones, calls, corrections, and webhook events
+- Signed, deduplicated ElevenLabs webhook intake and a recent-events page
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Keep the initial scope limited to authentication, schema, health, and webhook intake; do not build goals, milestones, or calling yet.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Keep all credentials and access codes in Replit Secrets; do not place their values in source, templates, or tests.
+- `DATABASE_URL` prefixes `postgres://` and `postgresql://` are normalized to the psycopg 3 SQLAlchemy dialect.
 
 ## Pointers
 

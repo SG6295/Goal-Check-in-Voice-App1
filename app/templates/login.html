@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Sign in · Goal Check-in{% endblock %}
+
+{% block content %}
+  <section class="login-layout">
+    <div class="intro-panel">
+      <a class="wordmark" href="/login">GOAL CHECK-IN</a>
+      <div class="intro-copy">
+        <p class="eyebrow">A little structure, one step at a time</p>
+        <h1>Make room for the work that matters.</h1>
+        <p class="intro-description">
+          Get thoughtful, practical check-ins that help turn a goal into the next
+          small thing you can finish.
+        </p>
+      </div>
+      <p class="intro-footnote">Private by design. Always on your terms.</p>
+    </div>
+
+    <div class="form-panel">
+      <div class="form-card">
+        <p class="eyebrow">Welcome</p>
+        <h2>Sign in to continue</h2>
+        <p class="form-description">Enter your access code and contact details.</p>
+
+        {% if errors.form %}
+          <div class="form-alert" role="alert">{{ errors.form }}</div>
+        {% endif %}
+
+        <form method="post" action="/login" novalidate>
+          <div class="field">
+            <label for="access_code">Access code</label>
+            <input id="access_code" name="access_code" type="password" required autocomplete="current-password">
+            {% if errors.access_code %}<p class="field-error" role="alert">{{ errors.access_code }}</p>{% endif %}
+          </div>
+
+          <div class="field">
+            <label for="name">Your name</label>
+            <input id="name" name="name" type="text" maxlength="80" required autocomplete="name" value="{{ values.name or '' }}">
+            {% if errors.name %}<p class="field-error" role="alert">{{ errors.name }}</p>{% endif %}
+          </div>
+
+          <div class="field">
+            <label for="phone">Mobile number</label>
+            <div class="phone-hint">India · +91</div>
+            <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required value="{{ values.phone or '' }}" placeholder="98765 43210">
+            {% if errors.phone %}<p class="field-error" role="alert">{{ errors.phone }}</p>{% endif %}
+          </div>
+
+          <div class="consent-field">
+            <input id="consent" name="consent" type="checkbox" required>
+            <label for="consent">{{ consent_text }}</label>
+          </div>
+          {% if errors.consent %}<p class="field-error consent-error" role="alert">{{ errors.consent }}</p>{% endif %}
+
+          <button class="primary-button" type="submit">Continue <span aria-hidden="true">→</span></button>
+        </form>
+        <p class="privacy-note">Your number is used for the check-ins you agree to receive.</p>
+      </div>
+    </div>
+  </section>
+{% endblock %}
