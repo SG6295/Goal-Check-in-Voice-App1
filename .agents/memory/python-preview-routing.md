@@ -13,3 +13,9 @@ Development and production service declarations must both be maintained.
 **Why:** A working development-only Python service was omitted from publishing, which launched only the Node API and left the root app unavailable.
 
 **How to apply:** Check each service's production run command and health route when diagnosing a preview/production mismatch; a successful publish alone does not prove the intended service launched.
+
+Rely on the publishing dependency-install phase for Python requirements rather than adding a second bare pip install to artifact builds.
+
+**Why:** The artifact build environment's system Python is externally managed; bare pip fails with PEP 668 even after the earlier dependency phase successfully installed into .pythonlibs.
+
+**How to apply:** Keep dependencies in requirements.txt and use an import check to validate availability during the artifact build.

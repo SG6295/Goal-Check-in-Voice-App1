@@ -40,7 +40,7 @@ paths = ["/"]
 run = "cd ../.. && exec uvicorn app.main:app --host 0.0.0.0 --port $PORT"
 
 [services.production.build]
-args = ["python", "-m", "pip", "install", "-r", "requirements.txt"]
+args = ["python", "-c", "import fastapi, sqlalchemy, psycopg, jinja2, uvicorn, elevenlabs, httpx, itsdangerous, multipart, tzdata"]
 
 [services.production.run]
 args = ["sh", "-c", "exec python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"]
