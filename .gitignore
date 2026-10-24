@@ -60,3 +60,11 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .venv/
+
+# Local environment and database files
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite
+*.sqlite3
